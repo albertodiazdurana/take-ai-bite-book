@@ -1,0 +1,12 @@
+# DSM session-state (local, transient)
+.claude/session-baseline.txt
+.claude/session-transcript.md
+.claude/last-align.txt
+.claude/last-align-report.md
+.claude/last-wrap-up.txt
+.claude/kickoff-done.txt
+.claude/memory/
+
+# Future (BL-002 Sprint 1): content copied from DSM Central at build time
+book/content/
+book/_build/
