@@ -2,7 +2,9 @@
 
 **Date:** 2026-04-17
 **BL:** BACKLOG-001
-**Status:** In progress (questions surfaced, awaiting user decisions)
+**Status:** Done
+**Date Completed:** 2026-04-17
+**Outcome:** Promoted to `dsm-docs/decisions/0003_content-scope.md` (Accepted, bundle: Q1+Q1a+Q2+Q3+Q4)
 **Author:** Alberto Diaz Durana
 
 ---
