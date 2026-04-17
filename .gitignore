@@ -6,7 +6,12 @@
 .claude/last-wrap-up.txt
 .claude/kickoff-done.txt
 .claude/memory/
+.claude/transcripts/
 
 # Future (BL-002 Sprint 1): content copied from DSM Central at build time
 book/content/
 book/_build/
+
+# Node.js build environment (mystmd via package.json)
+node_modules/
+# Keep package-lock.json tracked for reproducibility

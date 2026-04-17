@@ -1,0 +1,23 @@
+{
+  "name": "dsm-jupyter-book",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build pipeline that renders DSM Central release tags as a MyST documentation site and deploys to GitHub Pages.",
+  "scripts": {
+    "build": "cd book && myst build",
+    "start": "cd book && myst start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/albertodiazdurana/take-ai-bite-book.git"
+  },
+  "author": "Alberto Diaz Durana",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/albertodiazdurana/take-ai-bite-book/issues"
+  },
+  "homepage": "https://github.com/albertodiazdurana/take-ai-bite-book#readme",
+  "devDependencies": {
+    "mystmd": "^1.8.3"
+  }
+}

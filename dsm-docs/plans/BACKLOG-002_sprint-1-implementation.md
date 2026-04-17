@@ -26,6 +26,21 @@ to Sprint 2.
 - **R3 verify-in-implementation items:** MyST build time, largest-page
   load, `myst.yml` footer-template feasibility.
 
+## Branch Strategy
+
+Per DSM_0.2 Three-Level Branching Strategy:
+
+- **Level 1:** `main` (only merges from Level 2 via PR).
+- **Level 2:** `session-N/YYYY-MM-DD` (current: `session-2/2026-04-17`).
+- **Level 3:** `sprint-1/2026-04-17` off the current session branch. All
+  work items A-I land as their own commits on this sprint branch to
+  preserve the dependency chain in git history.
+
+Merge-back sequence at sprint close:
+1. Sprint branch merges to session branch when all Sprint Boundary
+   Checklist items are ticked (not just when exit criteria are met).
+2. Session branch merges to `main` via PR at session wrap-up.
+
 ## Exit criteria (Sprint 1 is done when all of these are true)
 
 1. Site deploys successfully at DSM Central **v1.5.2** via manual
@@ -189,12 +204,67 @@ to Sprint 2.
   write`). Mitigation: copy from the `myst init --gh-pages` template;
   don't hand-roll.
 
+## How to Resume
+
+If this sprint is picked up by a future session:
+
+1. Read this sprint plan end-to-end.
+2. Read the most recent checkpoint in `dsm-docs/checkpoints/` (none yet
+   at sprint start; created at sprint close per Boundary Checklist).
+3. `git checkout sprint-1/2026-04-17` (or the active sprint branch
+   tracked in MEMORY.md "Pending for next session").
+4. Verify toolchain: `mystmd --version` available locally; `gh` CLI
+   authenticated for the manual `workflow_dispatch` fire (item G).
+5. Inspect git log on the sprint branch to identify the next
+   unchecked work item in the A-I sequence.
+6. Continue from that item; each item lands as its own commit with
+   message prefix matching the item letter (e.g., "A: myst init
+   skeleton", "B: content-copy script").
+
 ## Notes
 
-- Each work item A-I should land as its own commit on a Sprint-1 task
-  branch (`sprint-1/{YYYY-MM-DD}` per Three-Level Branching Strategy)
-  to preserve the dependency chain in git history.
-- Sprint 1 closes when exit criteria 1-6 are all met; at that point,
-  this file moves to `dsm-docs/plans/done/` with
-  `**Date Completed:** YYYY-MM-DD` and `**Outcome:** Sprint 1 exit
-  criteria met; {commit-sha}`.
+- **Capability vs closure.** Exit criteria 1-6 define when the sprint
+  *capability* is delivered. Sprint *closure* requires additionally
+  ticking the Sprint Boundary Checklist below. The two are separate
+  gates: a green workflow run satisfies exit criteria but does not
+  close the sprint on its own.
+- When both gates pass, this file moves to `dsm-docs/plans/done/` with
+  `**Date Completed:** YYYY-MM-DD` and
+  `**Outcome:** Sprint 1 exit criteria met + boundary checklist
+  complete; {commit-sha}`.
+
+## Sprint Boundary Checklist
+
+Per DSM Template 8 (`DSM_2.0.C_Sprint_Assessment_Templates.md` §1).
+Project type is Application (DSM 4.0) (reclassified in Session 2;
+see CLAUDE.md §Project Type). All 8 canonical Template 8 items apply,
+including "Tests passing" (DSM 4.0).
+
+- [ ] Checkpoint document created (`dsm-docs/checkpoints/YYYY-MM-DD_s{N}_sprint-1-close.md`)
+  covering: sprint outcome summary, measurements recorded, any
+  follow-up BLs spawned, branch state at close.
+- [ ] Feedback files updated:
+  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_backlogs.md` for any
+    new BL proposals surfaced during sprint execution.
+  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_methodology.md` for
+    methodology observations and scores.
+- [ ] Decision log updated: any new decisions made during sprint
+  execution filed under `dsm-docs/decisions/` with the next
+  sequential number after 0003.
+- [ ] Tests passing: item G's end-to-end test (manual
+  `workflow_dispatch` fire) ran green and the deployed site renders
+  v1.5.2 correctly. Any subsequent unit/integration tests for
+  `scripts/*.sh` added during sprint execution also pass.
+- [ ] Blog journal entry written (`dsm-docs/blog/journal.md`) capturing
+  the "pipeline first green build" moment; format per the existing
+  journal entry template.
+- [ ] Blog publication tracker updated (`dsm-docs/blog/README.md`)
+  if a blog entry or material file was generated; otherwise skip with
+  a note in the checkpoint.
+- [ ] Repository README updated: project `README.md` reflects that the
+  book site is live, includes the deployed URL, and links to the
+  DSM Central source repo.
+- [ ] Next steps summary written in the checkpoint: 3-5 sentences
+  covering Sprint 2 goal (activate scheduled cron, address any R3
+  measurement follow-ups), key deliverables, and the plan reference
+  (Sprint 2 preview section above).
