@@ -126,7 +126,10 @@ Use "," instead of "—" for connecting phrases in any language.
 [GitHub](https://github.com/albertodiazdurana) | [LinkedIn](https://www.linkedin.com/in/albertodiazdurana/)
 
 ## Project Type
-Hybrid: DSM 1.0 for research/planning, DSM 4.0 for sync tooling
+Documentation (DSM 5.0). The project structure is markdown-only (jupyter-book),
+no `notebooks/` or `src/`. Methodology applied across phases:
+- Research/planning: DSM 1.0 Phase 0.5
+- Sync tooling (GH Actions, build pipeline): DSM 4.0 patterns
 
 ## Current Phase
 Phase 0.5: Research and Grounding
