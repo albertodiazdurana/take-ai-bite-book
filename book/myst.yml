@@ -7,8 +7,9 @@ project:
   title: DSM Methodology
   description: >
     A deliberate, systematic methodology for agentic-AI data-science work.
-    Built from the upstream DSM Central repository at a tagged release.
-  github: https://github.com/albertodiazdurana/dsm-agentic-ai-data-science-methodology
+    Built from the upstream take-ai-bite repository (public mirror of DSM
+    Central) at a tagged release.
+  github: https://github.com/albertodiazdurana/take-ai-bite
   license:
     content: CC-BY-4.0
     code: MIT

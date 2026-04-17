@@ -11,16 +11,25 @@
 
 ## Goal
 
-Deliver an end-to-end sync pipeline that takes a DSM Central release tag
-and produces a deployed book on GitHub Pages. First proof via manual
-trigger (`workflow_dispatch`); scheduled cron is intentionally deferred
-to Sprint 2.
+Deliver an end-to-end sync pipeline that takes a `take-ai-bite` release
+tag (the public mirror of DSM Central) and produces a deployed book on
+GitHub Pages. First proof via manual trigger (`workflow_dispatch`);
+scheduled cron is intentionally deferred to Sprint 2.
+
+**Upstream note (Session 2 correction):** The upstream the book renders
+is `github.com/albertodiazdurana/take-ai-bite`, not DSM Central directly.
+DSM Central is private; `take-ai-bite` is the curated public mirror that
+contains only the content Alberto chooses to publish. Session 1's plan
+text named "DSM Central" as the upstream; all such references below have
+been reworded to `take-ai-bite`. DSM Central remains the methodology hub
+for governance (feedback routing, protocol inheritance), unchanged.
 
 ## Inputs (settled)
 
 - **Decision 0001:** Tool = Jupyter Book 2 (MyST Document Engine).
 - **Decision 0002:** Sync = scheduled cron (pull-from-book-repo).
-- **Decision 0003:** Content scope = flat `*.md` from Central root;
+- **Decision 0003:** Content scope = flat `*.md` from `take-ai-bite` root
+  (35 DSM_*.md + 4 community files + 4 public-facing extras = 43 files);
   LICENSE = footer link; tag filter = strict semver; version display =
   title + footer with date.
 - **R3 verify-in-implementation items:** MyST build time, largest-page
@@ -43,11 +52,13 @@ Merge-back sequence at sprint close:
 
 ## Exit criteria (Sprint 1 is done when all of these are true)
 
-1. Site deploys successfully at DSM Central **v1.5.2** via manual
-   `workflow_dispatch` trigger.
+1. Site deploys successfully at take-ai-bite **v1.5.2** (mirrored from
+   DSM Central v1.5.2) via manual `workflow_dispatch` trigger.
+   **Prerequisite:** take-ai-bite has a v1.5.2 git tag. See "Open issues"
+   below.
 2. Deployed site shows `DSM Methodology — v1.5.2` in the title.
 3. Deployed site footer shows `Built from DSM v1.5.2 (2026-MM-DD)` with
-   the actual build date, and a "License" link pointing at Central's
+   the actual build date, and a "License" link pointing at take-ai-bite's
    LICENSE file.
 4. `.last-built-version` file at repo root contains `v1.5.2`.
 5. R3 measurement items recorded in
@@ -72,19 +83,22 @@ Merge-back sequence at sprint close:
 
 ### B. Content-copy script
 
-- Script location: `scripts/copy-central-content.sh`.
-- Behavior: takes `CENTRAL_DIR` and `DEST_DIR` arguments; copies
+- Script location: `scripts/copy-upstream-content.sh`.
+- Behavior: takes `UPSTREAM_DIR` and `DEST_DIR` arguments; copies the
+  flat set (no recursion) of files from `UPSTREAM_DIR`:
   `DSM_*.md`, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`,
-  `CODE_OF_CONDUCT.md` from `CENTRAL_DIR` to `DEST_DIR`. No recursion.
-- Flat glob only — no `**/` patterns.
+  `CODE_OF_CONDUCT.md`, `FEATURES.md`, `LICENSE-DOCS.md`, `SECURITY.md`,
+  `TAKE_A_BITE.md` to `DEST_DIR`. Against take-ai-bite as of 2026-04-18,
+  this copies 43 files (35 DSM_*.md + 8 community/public-facing).
+- Flat glob only, no `**/` patterns.
 
 ### C. Tag-filter + diff-check script
 
 - Script location: `scripts/check-central-version.sh`.
 - Behavior:
-  1. Query Central's latest tag via `gh api repos/albertodiazdurana/
-     dsm-agentic-ai-data-science-methodology/tags` (or equivalent
-     public API call, no auth needed for public repo read).
+  1. Query take-ai-bite's latest tag via `gh api repos/albertodiazdurana/
+     take-ai-bite/tags` (or equivalent public API call, no auth needed
+     for public repo read).
   2. Filter through regex `^v[0-9]+\.[0-9]+\.[0-9]+$`.
   3. Read `.last-built-version` from repo root (or empty if missing).
   4. Exit 0 (no rebuild needed) if latest matches last-built.
@@ -97,7 +111,7 @@ Merge-back sequence at sprint close:
   (`YYYY-MM-DD`) and rewrites `book/myst.yml`:
   - `site.options.logo_text` = `"DSM Methodology — {tag}"`
   - Footer string carrying `"Built from DSM {tag} ({date})"` plus a
-    License link to Central's LICENSE file URL — mechanism TBD
+    License link to take-ai-bite's LICENSE file URL, mechanism TBD
     (verify-in-implementation from R3).
 - If `myst.yml` alone cannot template the footer, file a follow-up BL
   for the custom-theme path rather than hand-rolling it in this
@@ -110,12 +124,13 @@ Merge-back sequence at sprint close:
   (commented out, enabled in Sprint 2).
 - Steps:
   1. Checkout this repo
-  2. Clone DSM Central (public, no secret): `gh repo clone
-     albertodiazdurana/dsm-agentic-ai-data-science-methodology
-     /tmp/central`
-  3. Run `scripts/check-central-version.sh`; if exit 0, no-op and done
-  4. If rebuild needed: `git -C /tmp/central checkout {new-tag}`
-  5. Run `scripts/copy-central-content.sh /tmp/central book/content/`
+  2. Clone take-ai-bite (public, no secret): `gh repo clone
+     albertodiazdurana/take-ai-bite /tmp/upstream`
+  3. Run `scripts/check-central-version.sh`; if exit 0, no-op and done.
+     (Script name retained as written for Session 1 continuity; it checks
+     the upstream configured in its body, which is take-ai-bite.)
+  4. If rebuild needed: `git -C /tmp/upstream checkout {new-tag}`
+  5. Run `scripts/copy-upstream-content.sh /tmp/upstream book/content/`
   6. Run `scripts/inject-version.sh {new-tag} $(date -u +%Y-%m-%d)`
   7. Run the deploy workflow generated by `myst init --gh-pages`
      (either invoke it or inline `mystmd build` + deploy-to-Pages
@@ -166,7 +181,7 @@ Merge-back sequence at sprint close:
 - Large-file pagination / H2-splitting transform (deferred per R3
   criterion)
 - Book landing page / project README tailored for readers (Sprint 2)
-- Automated check that Central CHANGELOG entries appear in the
+- Automated check that take-ai-bite CHANGELOG entries appear in the
   deployed site (Sprint 2 nice-to-have)
 
 ## Sprint 2 preview (not this sprint)
@@ -174,7 +189,7 @@ Merge-back sequence at sprint close:
 - Enable scheduled cron (uncomment the `schedule:` stanza after
   Sprint 1 proves the pipeline).
 - Act on any R3 measurement follow-ups.
-- Write a reader-facing project README (distinct from DSM Central's
+- Write a reader-facing project README (distinct from take-ai-bite's
   README).
 - Consider a GitHub release on this repo when the book first goes
   live, so the site launch is traceable.
@@ -185,8 +200,14 @@ Merge-back sequence at sprint close:
   install mystmd` or similar setup step).
 - `gh` CLI available (preinstalled on GitHub-hosted runners).
 - Repo Settings → Pages configured (item F).
-- DSM Central stays public — any change to visibility would break
+- take-ai-bite stays public — any change to visibility would break
   the no-PAT assumption and require revisiting Decision 0002.
+- take-ai-bite carries the same semver tags as DSM Central. Currently
+  take-ai-bite has zero tags (verified 2026-04-18). Before item G's
+  first test fire, take-ai-bite must have at least one tag matching
+  `^v\d+\.\d+\.\d+$`, ideally v1.5.2 mirroring Central's current
+  version. Tag-propagation protocol (Central -> take-ai-bite) is the
+  user's responsibility and is called out as an Open issue below.
 
 ## Risks
 
@@ -233,6 +254,22 @@ If this sprint is picked up by a future session:
   `**Outcome:** Sprint 1 exit criteria met + boundary checklist
   complete; {commit-sha}`.
 
+## Open issues (Session 2)
+
+- **take-ai-bite tagging prerequisite.** The upstream currently has zero
+  git tags. Item G's first test fire requires at least a `v1.5.2` tag on
+  take-ai-bite's main branch (mirroring Central). Two options for
+  resolving:
+  1. User manually tags `v1.5.2` on take-ai-bite's main before item G.
+  2. Document a Central -> take-ai-bite tag propagation protocol (push
+     tags on every mirror sync) and file as a follow-up BL. This is the
+     longer-term answer; option 1 unblocks Sprint 1.
+- **take-ai-bite CHANGELOG.md already carries version history** in text
+  form (Keep a Changelog format), so even if git tags lag, the version
+  story is documented. A fallback `check-upstream-version.sh` variant
+  could parse CHANGELOG.md instead of querying tags; deferred to Sprint
+  2 if tag-propagation stays manual.
+
 ## Sprint Boundary Checklist
 
 Per DSM Template 8 (`DSM_2.0.C_Sprint_Assessment_Templates.md` §1).
@@ -263,7 +300,7 @@ including "Tests passing" (DSM 4.0).
   a note in the checkpoint.
 - [ ] Repository README updated: project `README.md` reflects that the
   book site is live, includes the deployed URL, and links to the
-  DSM Central source repo.
+  take-ai-bite source repo.
 - [ ] Next steps summary written in the checkpoint: 3-5 sentences
   covering Sprint 2 goal (activate scheduled cron, address any R3
   measurement follow-ups), key deliverables, and the plan reference
