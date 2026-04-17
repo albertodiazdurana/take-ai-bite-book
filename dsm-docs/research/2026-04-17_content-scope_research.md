@@ -22,25 +22,46 @@ a single `dsm-docs/decisions/0003_content-scope.md` ADR.
 
 ## Q1. Should `case-studies/` be included in the book?
 
-**Evidence from DSM Central inspection:**
-- No `case-studies/` directory exists in DSM Central's repo root
-  (verified by `ls ~/dsm-agentic-ai-data-science-methodology/`).
-- One file matches a "case study" pattern: `DSM_3.0.A_Template_Examples.md`,
-  which is a regular `DSM_*.md` file already covered by the existing
-  scope (Core methodology files).
-- The original plan question may have anticipated future case-studies
-  content that hasn't materialized.
+**ANSWERED (Session 1):** No case-studies. User clarification 2026-04-17:
+"The scope of this book is to display on the internet, in a human-
+readable way, the main DSM files in TAB — these are all md files in
+the root folder."
 
-**Recommended default:** **No special handling.** Include
-`DSM_3.0.A_Template_Examples.md` as part of the standard `DSM_*.md`
-glob (it already qualifies). If a `case-studies/` folder appears in
-Central later, that triggers a follow-up scope decision; the cron
-workflow will silently ignore the new folder until then.
+### Source glob (sharpened scope rule)
 
-**User decision needed:** Accept default, or carve out a separate
-section in the book TOC for "Examples / Case Studies" that explicitly
-features `DSM_3.0.A_Template_Examples.md` and any future case-study
-files?
+The book renders `.md` files that live **directly in the DSM Central
+repo root**. Flat glob, no recursion into subfolders.
+
+In scope:
+- `DSM_*.md` — the methodology docs (35 files as of 2026-04-17)
+- `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`
+  — community docs
+
+Out of scope:
+- Any `.md` inside subfolders (`scripts/`, `.claude/`, `plan/`,
+  `dsm-docs/`, etc.) — even though they may exist, they do NOT ship
+  to the book.
+- Non-`.md` files in the root, EXCEPT see Q1a below for `LICENSE`.
+
+The cron workflow's "copy" step uses a flat glob (`*.md` from Central
+root), not a recursive walk.
+
+### Q1a. (open sub-question)
+
+`LICENSE` is at Central root but is a plain text file, not Markdown.
+Documentation sites typically include the license either as a footer
+link or as a dedicated page. Two options:
+
+- **Include:** Convert LICENSE to a Markdown page (`LICENSE.md`
+  wrapper) so it shows up in the book TOC. Adds one build-time step.
+- **Footer link only:** Add a "License" link in the site footer
+  pointing to the LICENSE file in Central's GitHub repo. No build-time
+  conversion.
+
+**Recommended default:** Footer link only. Reader-facing benefit is
+identical and there's no content transformation to maintain.
+
+**User decision needed:** Include or footer-link?
 
 ---
 
@@ -116,7 +137,8 @@ from `myst.yml` alone, or whether a custom theme override is needed
 
 | Question | Recommended default | User decision needed? |
 |----------|---------------------|----------------------|
-| Q1 case-studies | No special handling; `DSM_3.0.A` covered by glob | Yes, accept or carve TOC section |
+| Q1 case-studies | ANSWERED: no case-studies; flat *.md from Central root | No (answered) |
+| Q1a LICENSE | Footer link only (no .md wrapper) | Yes, include or footer-link |
 | Q2 tag filter | Strict semver `^v\d+\.\d+\.\d+$` | Yes, accept or relax/tighten |
 | Q3 copy vs fetch | Build-time copy (already decided) | No, confirmation only |
 | Q4 version display | Option C (title + footer with date) | Yes, choose A/B/C/D |
