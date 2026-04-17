@@ -1,6 +1,7 @@
 # BACKLOG-002: Sprint 1 — Minimum Viable Sync Pipeline
 
-**Status:** Draft (pending approval)
+**Status:** Approved
+**Date Approved:** 2026-04-17 (Session 1)
 **Priority:** High
 **Date Created:** 2026-04-17
 **Origin:** Phase 0.5 closure (BL-001); Decisions 0001, 0002, 0003
