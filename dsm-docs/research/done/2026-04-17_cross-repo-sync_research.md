@@ -2,7 +2,9 @@
 
 **Date:** 2026-04-17
 **BL:** BACKLOG-001
-**Status:** In progress (recommendation drafted, pending decision promotion)
+**Status:** Done
+**Date Completed:** 2026-04-17
+**Outcome:** Promoted to `dsm-docs/decisions/0002_sync-mechanism.md` (Accepted)
 **Author:** Alberto Diaz Durana
 
 ---
