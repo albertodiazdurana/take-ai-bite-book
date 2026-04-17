@@ -33,18 +33,39 @@ Material, Docusaurus, Sphinx, mdBook, GitBook) better fit the requirements?
 **Output:** Decision recommendation with explicit rationale and rejection reasons
 for alternatives. Routed to `dsm-docs/decisions/` once approved.
 
-### R2. Cross-repo sync mechanism
+### R2. Cross-repo sync mechanism (automatic, zero manual intervention)
 **File:** `2026-04-17_cross-repo-sync_research.md`
-**Question:** What is the most reliable, low-maintenance pattern to trigger a
-build of this book when DSM Central pushes a release tag?
-**Patterns to evaluate:**
-- GitHub Actions `repository_dispatch` (Central -> book repo via PAT)
-- GitHub Actions `workflow_dispatch` with scheduled poll
-- Git submodules (Central as submodule of book repo)
-- Direct fetch at build time (book repo clones Central in workflow)
-- Webhook to GitHub Pages deploy
-**Output:** Decision with chosen mechanism, secret/permission requirements,
-and failure modes. Routed to `dsm-docs/decisions/`.
+**Top-level constraint:** "Minimal maintenance" requires the sync to run
+*automatically* with no human in the loop. "Automatic" is not the same as
+"trigger-on-tag" — scheduled polling is also automatic, on a different
+timing model. R2 must compare both strategy families and recommend one.
+
+**Question:** Which automation strategy best satisfies the
+auto-sync + minimal-maintenance requirements simultaneously?
+
+**Strategy family A — push-from-Central (event-driven):**
+- GitHub Actions `repository_dispatch` (Central tag push → book repo workflow,
+  via PAT or GitHub App)
+- Webhook to a build service
+- (Excluded: `workflow_dispatch` requires manual click, not automatic)
+
+**Strategy family B — pull-from-book-repo (scheduled):**
+- GH Actions cron job checks Central CHANGELOG / tags on a schedule
+  (daily, hourly), rebuilds if the latest version differs from last build
+- Scheduled job updates a Central submodule and rebuilds on diff
+
+**Comparison axes:**
+- Latency from Central tag to deployed update
+- Cross-repo authentication footprint (PAT, GitHub App, none)
+- Failure-mode visibility (silent miss vs. visible failure)
+- Required changes to DSM Central (any change to Central is a coordination cost)
+- Lock-in / vendor dependencies (GH Actions only vs. external webhook service)
+- DSM Central release cadence reality check (looking at CHANGELOG, 1-2 bumps
+  per week — does push-vs-pull latency matter at this cadence?)
+
+**Output:** Decision with chosen strategy family, specific mechanism, secret/
+permission requirements, failure modes, and the operational story for
+"what happens when the sync silently breaks?". Routed to `dsm-docs/decisions/`.
 
 ### R3. Markdown documentation site best practices
 **File:** `2026-04-17_doc-site-best-practices_research.md`
@@ -96,3 +117,11 @@ decision log than a research file. Could alternatively go directly to
 - Per `## Actionable Work Items` in CLAUDE.md, content in `_reference/` is
   INPUT to this BL, not a substitute for it. The preliminary plan informs R1-R4
   but does not decide them.
+
+## Scope changelog
+
+- **2026-04-17 (Session 1):** R2 reframed from a flat list of patterns into
+  two strategy families (push-from-Central event-driven vs. pull-from-book-repo
+  scheduled). "Automatic, zero manual intervention" elevated from implicit
+  preliminary-plan requirement to explicit R2 top-level constraint. Triggered
+  by user clarification mid-research after R1.
