@@ -1,0 +1,62 @@
+# Reusable workflow that builds the MyST book and publishes it to GitHub Pages.
+# Design (β): called by the scheduled-build.yml orchestrator (BL-002 item E)
+# after content has been copied and myst.yml has been injected with the
+# target version tag. Also exposed via workflow_dispatch for direct testing.
+#
+# Template origin: `myst init --gh-pages` (mystmd v1.8.3), with the following
+# intentional changes:
+#   - `on: push` removed (Sprint 1 exit criterion 6 mandates no auto-triggers).
+#   - `on: workflow_call` added so scheduled-build.yml can invoke this job.
+#   - `working-directory: book` set on the build step because myst.yml lives
+#     in book/, not repo root (per BL-002 content-scope decision).
+#   - Upload path updated to `./book/_build/html`.
+#
+# Ensure GitHub Pages settings for this repository are set to deploy with
+# **GitHub Actions** (BL-002 item F, one-time admin step).
+name: Deploy MyST site to GitHub Pages
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to check out before building (defaults to the caller's commit).
+        required: false
+        type: string
+env:
+  # BASE_URL determines, relative to the root of the domain, where the site is served from.
+  # For repos that are not `<user>.github.io`, this is the repository name.
+  BASE_URL: /${{ github.event.repository.name }}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+      - name: Install mystmd
+        run: npm install -g mystmd
+      - name: Build HTML assets
+        run: myst build --html
+        working-directory: book
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./book/_build/html
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
