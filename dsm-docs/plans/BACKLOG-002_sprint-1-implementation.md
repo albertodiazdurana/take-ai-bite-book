@@ -24,6 +24,15 @@ text named "DSM Central" as the upstream; all such references below have
 been reworded to `take-ai-bite`. DSM Central remains the methodology hub
 for governance (feedback routing, protocol inheritance), unchanged.
 
+**Target version bump (Session 3 correction):** The original Sprint 1
+target was take-ai-bite v1.5.2. DSM Central shipped BL-376 between
+Sessions 2 and 3, which auto-mirrors release tags from Central to
+take-ai-bite via `/dsm-version-update` Step 4b. The first release under
+the new mechanism is v1.5.3 (live on take-ai-bite at commit `a37c070`).
+BL-376 explicitly rules out backfilling historical tags, so v1.5.2 will
+never exist on take-ai-bite. Sprint 1 target updated to v1.5.3 in exit
+criteria 1-4 and the Prerequisite note; no other scope changes.
+
 ## Inputs (settled)
 
 - **Decision 0001:** Tool = Jupyter Book 2 (MyST Document Engine).
@@ -52,15 +61,15 @@ Merge-back sequence at sprint close:
 
 ## Exit criteria (Sprint 1 is done when all of these are true)
 
-1. Site deploys successfully at take-ai-bite **v1.5.2** (mirrored from
-   DSM Central v1.5.2) via manual `workflow_dispatch` trigger.
-   **Prerequisite:** take-ai-bite has a v1.5.2 git tag. See "Open issues"
-   below.
-2. Deployed site shows `DSM Methodology — v1.5.2` in the title.
-3. Deployed site footer shows `Built from DSM v1.5.2 (2026-MM-DD)` with
+1. Site deploys successfully at take-ai-bite **v1.5.3** (mirrored from
+   DSM Central v1.5.3 via BL-376's tag-propagation mechanism) through
+   manual `workflow_dispatch` trigger. **Prerequisite satisfied:**
+   take-ai-bite carries `v1.5.3` at commit `a37c070` as of 2026-04-18.
+2. Deployed site shows `DSM Methodology — v1.5.3` in the title.
+3. Deployed site footer shows `Built from DSM v1.5.3 (2026-MM-DD)` with
    the actual build date, and a "License" link pointing at take-ai-bite's
    LICENSE file.
-4. `.last-built-version` file at repo root contains `v1.5.2`.
+4. `.last-built-version` file at repo root contains `v1.5.3`.
 5. R3 measurement items recorded in
    `dsm-docs/research/done/2026-04-17_doc-site-best-practices_research.md`
    (update, not new file):
@@ -202,12 +211,14 @@ Merge-back sequence at sprint close:
 - Repo Settings → Pages configured (item F).
 - take-ai-bite stays public — any change to visibility would break
   the no-PAT assumption and require revisiting Decision 0002.
-- take-ai-bite carries the same semver tags as DSM Central. Currently
-  take-ai-bite has zero tags (verified 2026-04-18). Before item G's
-  first test fire, take-ai-bite must have at least one tag matching
-  `^v\d+\.\d+\.\d+$`, ideally v1.5.2 mirroring Central's current
-  version. Tag-propagation protocol (Central -> take-ai-bite) is the
-  user's responsibility and is called out as an Open issue below.
+- take-ai-bite carries semver tags mirrored from DSM Central via
+  BL-376 (shipped between Sessions 2 and 3). As of 2026-04-18, take-ai-bite
+  has `v1.5.3` at commit `a37c070` (Central's first release under the new
+  mirror mechanism). Tag propagation is now automated on every
+  `/dsm-version-update` run in Central; no manual step required. Older
+  Central tags (v1.3.0-v1.5.2) are not backfilled and will never exist on
+  take-ai-bite. See "Open issues" below for the historical context that
+  is now resolved.
 
 ## Risks
 
@@ -254,21 +265,25 @@ If this sprint is picked up by a future session:
   `**Outcome:** Sprint 1 exit criteria met + boundary checklist
   complete; {commit-sha}`.
 
-## Open issues (Session 2)
+## Open issues
 
-- **take-ai-bite tagging prerequisite.** The upstream currently has zero
-  git tags. Item G's first test fire requires at least a `v1.5.2` tag on
-  take-ai-bite's main branch (mirroring Central). Two options for
-  resolving:
-  1. User manually tags `v1.5.2` on take-ai-bite's main before item G.
-  2. Document a Central -> take-ai-bite tag propagation protocol (push
-     tags on every mirror sync) and file as a follow-up BL. This is the
-     longer-term answer; option 1 unblocks Sprint 1.
+### Session 2 (resolved in Session 3)
+
+- **take-ai-bite tagging prerequisite — RESOLVED.** Session 2 flagged
+  that take-ai-bite had zero git tags and proposed two resolutions
+  (manual tag, or CHANGELOG-parse fallback). Between Sessions 2 and 3,
+  DSM Central shipped BL-376 (Mirror Central Release Tags to TAB on
+  /dsm-version-update), which auto-pushes `vX.Y.Z` tags from Central to
+  take-ai-bite on every release. v1.5.3 landed on take-ai-bite at
+  `a37c070` on 2026-04-18; this is the first tag available to item G and
+  replaces v1.5.2 as the Sprint 1 target. Item C therefore adopts the
+  simpler "query tags via `gh api`" path (strategy (a)), no CHANGELOG
+  fallback needed for Sprint 1.
 - **take-ai-bite CHANGELOG.md already carries version history** in text
-  form (Keep a Changelog format), so even if git tags lag, the version
-  story is documented. A fallback `check-upstream-version.sh` variant
-  could parse CHANGELOG.md instead of querying tags; deferred to Sprint
-  2 if tag-propagation stays manual.
+  form (Keep a Changelog format). Still valid as a second-layer fallback
+  if `gh api` is unreachable, but not required for Sprint 1 given
+  BL-376's automated tag propagation. CHANGELOG-parse variant deferred
+  indefinitely unless a future failure mode motivates it.
 
 ## Sprint Boundary Checklist
 

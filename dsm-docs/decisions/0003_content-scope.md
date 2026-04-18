@@ -1,8 +1,8 @@
 # Decision 0003: Content Scope and Display Conventions
 
-**Status:** Accepted (upstream corrected + scope extended Session 2)
+**Status:** Accepted (upstream corrected + scope extended Session 2; tag-availability resolved Session 3)
 **Date:** 2026-04-17
-**Session:** 1 (authored), Session 2 (upstream + scope corrected)
+**Session:** 1 (authored), Session 2 (upstream + scope corrected), Session 3 (tag-availability update)
 **Related:** BACKLOG-001 (R4), `dsm-docs/research/2026-04-17_content-scope_research.md`, Decisions 0001 and 0002
 
 ---
@@ -65,8 +65,12 @@ regex `^v\d+\.\d+\.\d+$`.
   Central; any outliers mirrored in would also be filtered out.
 - Future release-candidate tags (`vX.Y.Z-rcN`, etc.) are also ignored.
   RCs are not deployed to the public docs site by intent.
-- **Session 2 status:** take-ai-bite currently has zero tags (mirrored or
-  otherwise). Resolution options documented in BL-002 Open issues.
+- **Session 3 status:** BL-376 (shipped in DSM Central between Sessions 2
+  and 3) auto-mirrors release tags from Central to take-ai-bite. First
+  tag available is `v1.5.3` (2026-04-18, at take-ai-bite commit `a37c070`).
+  Historical tags (v1.3.0-v1.5.2) will not be backfilled per BL-376 scope.
+  The `^v\d+\.\d+\.\d+$` filter remains correct; the zero-tags blocker
+  from Session 2 is resolved.
 
 ### 4. Copy vs fetch (Q3)
 

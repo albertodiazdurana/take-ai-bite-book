@@ -1,8 +1,8 @@
 # Decision 0002: Sync Mechanism — Scheduled Cron (pull-from-book-repo)
 
-**Status:** Accepted (upstream reference corrected Session 2)
+**Status:** Accepted (upstream reference corrected Session 2; tagging dependency resolved Session 3)
 **Date:** 2026-04-17
-**Session:** 1 (authored), Session 2 (upstream name corrected)
+**Session:** 1 (authored), Session 2 (upstream name corrected), Session 3 (tag-dependency update)
 **Related:** BACKLOG-001 (R2), `dsm-docs/research/2026-04-17_cross-repo-sync_research.md`, Decision 0001
 
 ---
@@ -84,11 +84,12 @@ only if the version differs.
   commit message), keeping the schedule alive. Documented as a known
   GitHub Actions behavior, not a bug.
 - **Upstream tagging dependency.** This decision assumes take-ai-bite carries
-  git tags matching `^v\d+\.\d+\.\d+$`. Currently take-ai-bite has zero
-  tags (verified Session 2, 2026-04-18). Tag propagation from DSM Central
-  to take-ai-bite is the user's operational responsibility and must be
-  resolved before Sprint 1 item G's first test fire. See BL-002 Open
-  issues for context and fallbacks.
+  git tags matching `^v\d+\.\d+\.\d+$`. **Session 3 update:** DSM Central
+  shipped BL-376 between Sessions 2 and 3, adding automated tag propagation
+  (Central -> take-ai-bite) on every `/dsm-version-update` run. First
+  mirrored tag is `v1.5.3` at commit `a37c070` (live 2026-04-18). Older
+  Central tags (v1.3.0-v1.5.2) are not backfilled. Tag propagation is now
+  a Central-side automated step, not a manual user operation.
 - **Build/deploy substrate:** `myst init --gh-pages` scaffold (per
   Decision 0001). The trigger (`on:`) is decoupled from the build job, so
   this decision is reversible without rewriting the build pipeline.
@@ -99,11 +100,12 @@ only if the version differs.
 ## Open follow-ups (deferred to implementation)
 
 - Choose version-comparison source: `gh api repos/albertodiazdurana/
-  take-ai-bite/releases/latest` (preferred, structured), raw
-  `CHANGELOG.md` parse (fallback, viable since take-ai-bite mirrors
-  Central's CHANGELOG), or both for redundancy. Session 2 note: with
-  no tags yet on take-ai-bite, CHANGELOG parse is the immediate-viable
-  fallback for the first test.
+  take-ai-bite/tags` (preferred, structured), raw `CHANGELOG.md` parse
+  (fallback, viable since take-ai-bite mirrors Central's CHANGELOG), or
+  both for redundancy. **Session 3 resolution:** with BL-376 auto-
+  propagating tags and `v1.5.3` live on take-ai-bite, `gh api .../tags`
+  is the Sprint 1 primary source. CHANGELOG-parse fallback is deferred
+  indefinitely unless a future failure mode motivates it.
 - Decide whether to filter on release tags (`vX.Y.Z`) only, vs all tags
   (R4 covers this).
 - Choose the diff strategy when CHANGELOG version differs: full re-clone
