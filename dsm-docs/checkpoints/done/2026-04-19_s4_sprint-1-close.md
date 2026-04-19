@@ -1,3 +1,5 @@
+**Consumed at:** Session 5 start (2026-04-19)
+
 # Sprint 1 closure checkpoint
 
 **Sprint:** 1 (BACKLOG-002)
