@@ -37,9 +37,8 @@ on:
         description: Rebuild even if the latest tag matches .last-built-version
         type: boolean
         default: false
-  # Sprint 2: uncomment to activate daily polling.
-  # schedule:
-  #   - cron: '0 6 * * *'
+  schedule:
+    - cron: '0 6 * * *'
 
 permissions:
   contents: write
