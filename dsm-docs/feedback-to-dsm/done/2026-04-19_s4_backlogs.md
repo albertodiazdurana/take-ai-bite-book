@@ -2,7 +2,7 @@
 
 **Source:** dsm-jupyter-book
 **Session:** 4
-**Pushed:** pending (to be pushed at /dsm-wrap-up)
+**Pushed:** 2026-04-19 (Session 4 /dsm-wrap-up) to `~/dsm-agentic-ai-data-science-methodology/_inbox/dsm-jupyter-book.md`
 
 ---
 
