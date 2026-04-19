@@ -1,7 +1,10 @@
 # BACKLOG-002: Sprint 1 — Minimum Viable Sync Pipeline
 
-**Status:** Approved
+**Status:** Done (closed 2026-04-19, Session 4)
 **Date Approved:** 2026-04-17 (Session 1)
+**Date Completed:** 2026-04-19
+**Built version at close:** v1.5.4 (live at https://albertodiazdurana.github.io/take-ai-bite-book/)
+**Closure checkpoint:** `dsm-docs/checkpoints/2026-04-19_s4_sprint-1-close.md`
 **Priority:** High
 **Date Created:** 2026-04-17
 **Origin:** Phase 0.5 closure (BL-001); Decisions 0001, 0002, 0003
@@ -292,31 +295,34 @@ Project type is Application (DSM 4.0) (reclassified in Session 2;
 see CLAUDE.md §Project Type). All 8 canonical Template 8 items apply,
 including "Tests passing" (DSM 4.0).
 
-- [ ] Checkpoint document created (`dsm-docs/checkpoints/YYYY-MM-DD_s{N}_sprint-1-close.md`)
-  covering: sprint outcome summary, measurements recorded, any
-  follow-up BLs spawned, branch state at close.
-- [ ] Feedback files updated:
-  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_backlogs.md` for any
-    new BL proposals surfaced during sprint execution.
-  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_methodology.md` for
-    methodology observations and scores.
-- [ ] Decision log updated: any new decisions made during sprint
-  execution filed under `dsm-docs/decisions/` with the next
-  sequential number after 0003.
-- [ ] Tests passing: item G's end-to-end test (manual
-  `workflow_dispatch` fire) ran green and the deployed site renders
-  v1.5.2 correctly. Any subsequent unit/integration tests for
-  `scripts/*.sh` added during sprint execution also pass.
-- [ ] Blog journal entry written (`dsm-docs/blog/journal.md`) capturing
-  the "pipeline first green build" moment; format per the existing
-  journal entry template.
-- [ ] Blog publication tracker updated (`dsm-docs/blog/README.md`)
-  if a blog entry or material file was generated; otherwise skip with
-  a note in the checkpoint.
-- [ ] Repository README updated: project `README.md` reflects that the
-  book site is live, includes the deployed URL, and links to the
-  take-ai-bite source repo.
-- [ ] Next steps summary written in the checkpoint: 3-5 sentences
-  covering Sprint 2 goal (activate scheduled cron, address any R3
-  measurement follow-ups), key deliverables, and the plan reference
-  (Sprint 2 preview section above).
+- [x] Checkpoint document created: `dsm-docs/checkpoints/2026-04-19_s4_sprint-1-close.md`,
+  covers sprint outcome summary, all 6 exit criteria with evidence, measurements,
+  surprises (three GitHub misconfigurations), follow-up BLs, and branch state at close.
+- [x] Feedback files created:
+  - `dsm-docs/feedback-to-dsm/2026-04-19_s4_backlogs.md` — High-priority proposal:
+    default-branch verification + explicit PR-base passing.
+  - `dsm-docs/feedback-to-dsm/2026-04-19_s4_methodology.md` — Two observations:
+    permission-system parity gap + agent-discipline failure on command defaults.
+- [x] Decision log: no new decisions spawned during sprint execution (existing
+  decisions 0002 and 0003 adequately cover the Sprint 1 implementation choices).
+- [x] Tests passing: item G's end-to-end test (`workflow_dispatch` with
+  `force=true`) ran green in 33 seconds. Run 24626654340, conclusion=success.
+  Deployed site renders **v1.5.4** (drifted up from the v1.5.2/v1.5.3 target
+  written in the original plan; steady-state behavior: the pipeline grabs the
+  latest tag, which was v1.5.4 at build time after BL-376's tag mirror
+  propagated DSM Central v1.5.4 to take-ai-bite on 2026-04-19).
+  No unit tests for `scripts/*.sh` were added in Sprint 1 (deferred to Sprint 2
+  along with any regression-test needs that emerge from real builds).
+- [x] Blog journal entry written: `dsm-docs/blog/journal.md` — "First green
+  build, and the three configs that looked like infrastructure bugs".
+- [x] Blog publication tracker: not applicable — project has no
+  `dsm-docs/blog/README.md` publication tracker yet; the journal entry
+  captures the moment and can be extracted into a materials file at
+  project/epoch end per the DSM_0.1 three-document pipeline.
+- [x] Repository README created: `README.md` at repo root includes the live
+  site URL (https://albertodiazdurana.github.io/take-ai-bite-book/), a
+  description of the build pipeline, and a link to the take-ai-bite upstream.
+- [x] Next steps summary in checkpoint §"Next steps (Sprint 2)": goal is
+  "manual → scheduled daily build in quiet steady-state", with four deliverables
+  (uncomment cron, strip executable-content runtime, archive H research to done/,
+  add version-drift reporting) and reference to the Sprint 2 preview section above.
