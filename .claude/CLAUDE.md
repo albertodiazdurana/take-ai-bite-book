@@ -97,6 +97,12 @@ Use "," instead of "—" for connecting phrases in any language.
 - Before wrap-up, cross-reference sprint plan if one exists (verify all deliverables accounted for)
 - At minimum: commit pending changes, push to remote, update MEMORY.md
 - Create a handoff document if complex work remains pending
+
+### App Development Protocol (reinforces inherited protocol)
+- Explain why before each action
+- Create files via Write/Edit tools; user approves via permission window
+- Wait for user confirmation before proceeding to next step
+- Build incrementally: imports → constants → one function → test → next function
 <!-- END DSM_0.2 ALIGNMENT -->
 
 # Project: DSM Jupyter Book
