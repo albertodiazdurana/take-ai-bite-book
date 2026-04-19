@@ -32,3 +32,17 @@ The methodology observation for DSM: every one of these could have been caught e
 Side observation on the build output: the 15-MB zipped Pages artifact is 90 % plotly + thebe JS runtime that this prose-only corpus never invokes. The book-theme ships interactive-content infrastructure unconditionally. A Sprint 2 BL candidate: trim to prose-only and see how small the deploy gets.
 
 Sprint 1 is closed. Sprint 2 starts with: activate the schedule, trim the bundle, formalize BL-003.
+
+---
+
+### [2026-04-19] Sprint 2 kickoff: cron live, research queued, and two merges with explicit brakes
+
+Session 5 formalized BACKLOG-003 and flipped the pipeline from manual to scheduled. The plan landed on main, the daily cron went live, and the artifact-bloat research file opened as a skeleton on the sprint branch.
+
+Two merges to main happened this session. Both went through the same checks: open PR with `--base main` explicit, verify the base with `gh pr view` before the merge, pause for user approval, then merge. Both looked trivial, a one-file plan in PR #5 and a two-line cron uncomment in PR #6, and trivial is exactly the shape of the bug Sprint 1 caught. The ritual stays. Merging to main is not where you save time.
+
+Of the three, the research file is the one I care about most. Sprint 1's checkpoint hypothesized plotly + thebe were ~90 % of the 68-MB deploy, but that number came from a quick peek, not a measured breakdown. Phase C's first task is to audit the claim before the implementation BL inherits it. If the hypothesis is wrong, the implementation sprint plans for a bundle that does not exist.
+
+The one thing that did not close cleanly was the `session-1/2026-04-17` force-delete. The branch carries commits from the wrong-base PR #2 that never reached main, so `git branch -d` refuses. The harness's permission policy refused the `-D` form twice despite my verbal authorization. Deferring to manual cleanup. What is worth noting: the S4 checkpoint described session-1 as "fully merged to main," an assumption nobody checked until this session actually ran `git merge-base --is-ancestor` and saw the reality.
+
+Next session's opening move: check whether the 06:00 UTC cron fire landed green, record the run ID, then pick up Phase B (drift reporting) or continue Phase C (evidence gathering), whichever is further from done.
