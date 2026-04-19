@@ -2,7 +2,8 @@
 
 **Date:** 2026-04-17
 **BL:** BACKLOG-001
-**Status:** In progress (recommendation drafted, pending decision promotion)
+**Status:** Done
+**Date Completed:** 2026-04-19 (Session 4, Sprint 1 closure — H measurements recorded)
 **Author:** Alberto Diaz Durana
 
 ---
@@ -181,6 +182,75 @@ documents and a TOC, not a scientific article with supporting notebooks.
   release-only, copy vs fetch, version display source. Some R3 patterns
   depend on R4 outcomes (e.g., version display source is "the tag the
   cron built from", but R4 decides which tags qualify).
+
+---
+
+## Sprint 1 item H: Measurements from the first end-to-end build (2026-04-19)
+
+**Run:** workflow_dispatch on `main`, `force=true`, GitHub Actions run [24626654340](https://github.com/albertodiazdurana/take-ai-bite-book/actions/runs/24626654340)
+**Upstream tag built:** v1.5.3 (latest on take-ai-bite, from BL-376 auto-mirror; resolved via `scripts/check-upstream-version.sh`)
+**Runner:** `ubuntu-latest`
+
+### Three required metrics
+
+| Metric | Value | Source of measurement |
+|---|---|---|
+| mystmd build wall time | **14 seconds** | Step 10 "Build HTML": 10:11:44Z → 10:11:58Z |
+| Largest page load size | **83 KB** (85,391 bytes) | `site/index.html` in the Pages artifact. NOTE: mystmd built a *single-page* site for this content set; index.html IS the page load. |
+| Search index size | **10 KB** (10,137 bytes) | `site/myst.search.json` (standard mystmd search-index JSON: `{version, records: [{hierarchy, content, url, position}]}`) |
+
+### Full timing breakdown (all 13 build steps)
+
+| Step | Name | Duration |
+|---|---|---|
+| 1 | Set up job | 2s |
+| 2 | actions/checkout@v4 | 0s |
+| 3 | Check upstream version | 0s |
+| 4 | Clone upstream at tag | 1s |
+| 5 | Copy upstream content | 0s |
+| 6 | Inject version into myst.yml | 0s |
+| 7 | Setup Pages | 0s |
+| 8 | setup-node@v4 | 4s |
+| 9 | Install mystmd (npm install -g) | 1s |
+| 10 | **Build HTML (myst build --html)** | **14s** |
+| 11 | Upload Pages artifact | 3s |
+| 12 | Deploy to GitHub Pages | 6s |
+| 13 | Commit .last-built-version back | 0s |
+| | **Job wall time** | **33 seconds** |
+
+### Artifact composition (unexpected finding)
+
+The uploaded Pages artifact is **68 MB uncompressed (15.4 MB zipped)**. Of that:
+
+- `build/_shared/plotly-ELWLZ5EC.js`: 14.5 MB (single largest file)
+- `build/_shared/plotly-5BWH43UK.js`: 4.8 MB
+- Five more `chunk-*.js` / `component-*.js` bundles: 1–4 MB each
+- `thebe-core.min.js`: 1.3 MB (plus ~20 smaller `*.thebe-core.min.js` chunks)
+
+The DSM content has no notebooks, no plotly charts, no interactive cells. The book-theme ships these runtimes unconditionally. **Sprint-2 optimization candidate:** strip unused executable-content runtime (plotly, thebe) from the theme build. This is an 18+ MB reduction (~90 % of the artifact) for a prose-only site.
+
+### Single-HTML-file observation
+
+mystmd produced **one HTML file** (`index.html`, 83 KB) for the whole 35-document DSM corpus. No per-chapter HTML. This is the mystmd book-theme default: an SPA that hydrates via JS and navigates via `history.pushState`, not a multi-page static site.
+
+Implications:
+- First-paint is the same across all "pages" — the 83 KB initial document is shared
+- Subsequent "page" loads are data fetches, not HTML fetches
+- The "largest page load" metric in the traditional sense (heaviest static HTML) is 83 KB, but the real first-load cost is HTML + the JS chunks required for hydration — the artifact breakdown above shows that cost is dominated by unused runtimes
+
+### Gaps caught during H execution, captured as Sprint 1 lessons
+
+Three setup-level failures prevented G from firing cleanly on the first three attempts. None were in the workflow code itself; all were in the repo / environment configuration surrounding it. These are captured as Session 4 feedback to DSM Central (`dsm-docs/feedback-to-dsm/2026-04-19_s4_*.md`):
+
+1. **GitHub-configured default branch was `session-1/2026-04-17`, not `main`** — set at repo creation (2026-04-17) and never flipped. Sprint 1 merged to main, but GitHub's workflow-indexer only tracks the *configured* default branch, so `workflow_dispatch` 404'd with "workflow not found on the default branch" even though the file was present on main.
+2. **A merge-commit from sprint branch → main does not trigger first-workflow registration** — GitHub's indexer needs a push that directly modifies a workflow file on the default branch. Required a separate PR (via ops branch) to touch `scheduled-build.yml` on main.
+3. **The `github-pages` environment's branch-deployment policy pinned `session-1/2026-04-17`** — auto-created when Pages source was set to Actions, the policy captured the then-default branch. After flipping the default to main, the policy did not auto-update; the first post-flip dispatch failed in 4 seconds at the environment gate, before any workflow step ran.
+
+**Closure signal:** after all three were addressed, run 24626654340 succeeded end-to-end in 33 seconds.
+
+### Live site
+
+Deployed to https://albertodiazdurana.github.io/take-ai-bite-book/ (propagation may take ~1 minute after workflow completion).
 
 ---
 
