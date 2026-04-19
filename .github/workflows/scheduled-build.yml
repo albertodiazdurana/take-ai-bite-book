@@ -1,4 +1,7 @@
 # Orchestrator for the DSM book's take-ai-bite -> GitHub Pages pipeline.
+# (Sprint 1 note: merge-from-branch does not trigger first-workflow
+# registration on GitHub; a direct-to-main commit touching this file is
+# required. Captured in H research.)
 #
 # Flow (BL-002 item E):
 #   1. Checkout this repo
