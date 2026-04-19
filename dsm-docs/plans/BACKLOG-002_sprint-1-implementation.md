@@ -11,30 +11,65 @@
 
 ## Goal
 
-Deliver an end-to-end sync pipeline that takes a DSM Central release tag
-and produces a deployed book on GitHub Pages. First proof via manual
-trigger (`workflow_dispatch`); scheduled cron is intentionally deferred
-to Sprint 2.
+Deliver an end-to-end sync pipeline that takes a `take-ai-bite` release
+tag (the public mirror of DSM Central) and produces a deployed book on
+GitHub Pages. First proof via manual trigger (`workflow_dispatch`);
+scheduled cron is intentionally deferred to Sprint 2.
+
+**Upstream note (Session 2 correction):** The upstream the book renders
+is `github.com/albertodiazdurana/take-ai-bite`, not DSM Central directly.
+DSM Central is private; `take-ai-bite` is the curated public mirror that
+contains only the content Alberto chooses to publish. Session 1's plan
+text named "DSM Central" as the upstream; all such references below have
+been reworded to `take-ai-bite`. DSM Central remains the methodology hub
+for governance (feedback routing, protocol inheritance), unchanged.
+
+**Target version bump (Session 3 correction):** The original Sprint 1
+target was take-ai-bite v1.5.2. DSM Central shipped BL-376 between
+Sessions 2 and 3, which auto-mirrors release tags from Central to
+take-ai-bite via `/dsm-version-update` Step 4b. The first release under
+the new mechanism is v1.5.3 (live on take-ai-bite at commit `a37c070`).
+BL-376 explicitly rules out backfilling historical tags, so v1.5.2 will
+never exist on take-ai-bite. Sprint 1 target updated to v1.5.3 in exit
+criteria 1-4 and the Prerequisite note; no other scope changes.
 
 ## Inputs (settled)
 
 - **Decision 0001:** Tool = Jupyter Book 2 (MyST Document Engine).
 - **Decision 0002:** Sync = scheduled cron (pull-from-book-repo).
-- **Decision 0003:** Content scope = flat `*.md` from Central root;
+- **Decision 0003:** Content scope = flat `*.md` from `take-ai-bite` root
+  (35 DSM_*.md + 4 community files + 4 public-facing extras = 43 files);
   LICENSE = footer link; tag filter = strict semver; version display =
   title + footer with date.
 - **R3 verify-in-implementation items:** MyST build time, largest-page
   load, `myst.yml` footer-template feasibility.
 
+## Branch Strategy
+
+Per DSM_0.2 Three-Level Branching Strategy:
+
+- **Level 1:** `main` (only merges from Level 2 via PR).
+- **Level 2:** `session-N/YYYY-MM-DD` (current: `session-2/2026-04-17`).
+- **Level 3:** `sprint-1/2026-04-17` off the current session branch. All
+  work items A-I land as their own commits on this sprint branch to
+  preserve the dependency chain in git history.
+
+Merge-back sequence at sprint close:
+1. Sprint branch merges to session branch when all Sprint Boundary
+   Checklist items are ticked (not just when exit criteria are met).
+2. Session branch merges to `main` via PR at session wrap-up.
+
 ## Exit criteria (Sprint 1 is done when all of these are true)
 
-1. Site deploys successfully at DSM Central **v1.5.2** via manual
-   `workflow_dispatch` trigger.
-2. Deployed site shows `DSM Methodology — v1.5.2` in the title.
-3. Deployed site footer shows `Built from DSM v1.5.2 (2026-MM-DD)` with
-   the actual build date, and a "License" link pointing at Central's
+1. Site deploys successfully at take-ai-bite **v1.5.3** (mirrored from
+   DSM Central v1.5.3 via BL-376's tag-propagation mechanism) through
+   manual `workflow_dispatch` trigger. **Prerequisite satisfied:**
+   take-ai-bite carries `v1.5.3` at commit `a37c070` as of 2026-04-18.
+2. Deployed site shows `DSM Methodology — v1.5.3` in the title.
+3. Deployed site footer shows `Built from DSM v1.5.3 (2026-MM-DD)` with
+   the actual build date, and a "License" link pointing at take-ai-bite's
    LICENSE file.
-4. `.last-built-version` file at repo root contains `v1.5.2`.
+4. `.last-built-version` file at repo root contains `v1.5.3`.
 5. R3 measurement items recorded in
    `dsm-docs/research/done/2026-04-17_doc-site-best-practices_research.md`
    (update, not new file):
@@ -57,19 +92,22 @@ to Sprint 2.
 
 ### B. Content-copy script
 
-- Script location: `scripts/copy-central-content.sh`.
-- Behavior: takes `CENTRAL_DIR` and `DEST_DIR` arguments; copies
+- Script location: `scripts/copy-upstream-content.sh`.
+- Behavior: takes `UPSTREAM_DIR` and `DEST_DIR` arguments; copies the
+  flat set (no recursion) of files from `UPSTREAM_DIR`:
   `DSM_*.md`, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`,
-  `CODE_OF_CONDUCT.md` from `CENTRAL_DIR` to `DEST_DIR`. No recursion.
-- Flat glob only — no `**/` patterns.
+  `CODE_OF_CONDUCT.md`, `FEATURES.md`, `LICENSE-DOCS.md`, `SECURITY.md`,
+  `TAKE_A_BITE.md` to `DEST_DIR`. Against take-ai-bite as of 2026-04-18,
+  this copies 43 files (35 DSM_*.md + 8 community/public-facing).
+- Flat glob only, no `**/` patterns.
 
 ### C. Tag-filter + diff-check script
 
 - Script location: `scripts/check-central-version.sh`.
 - Behavior:
-  1. Query Central's latest tag via `gh api repos/albertodiazdurana/
-     dsm-agentic-ai-data-science-methodology/tags` (or equivalent
-     public API call, no auth needed for public repo read).
+  1. Query take-ai-bite's latest tag via `gh api repos/albertodiazdurana/
+     take-ai-bite/tags` (or equivalent public API call, no auth needed
+     for public repo read).
   2. Filter through regex `^v[0-9]+\.[0-9]+\.[0-9]+$`.
   3. Read `.last-built-version` from repo root (or empty if missing).
   4. Exit 0 (no rebuild needed) if latest matches last-built.
@@ -82,7 +120,7 @@ to Sprint 2.
   (`YYYY-MM-DD`) and rewrites `book/myst.yml`:
   - `site.options.logo_text` = `"DSM Methodology — {tag}"`
   - Footer string carrying `"Built from DSM {tag} ({date})"` plus a
-    License link to Central's LICENSE file URL — mechanism TBD
+    License link to take-ai-bite's LICENSE file URL, mechanism TBD
     (verify-in-implementation from R3).
 - If `myst.yml` alone cannot template the footer, file a follow-up BL
   for the custom-theme path rather than hand-rolling it in this
@@ -95,12 +133,13 @@ to Sprint 2.
   (commented out, enabled in Sprint 2).
 - Steps:
   1. Checkout this repo
-  2. Clone DSM Central (public, no secret): `gh repo clone
-     albertodiazdurana/dsm-agentic-ai-data-science-methodology
-     /tmp/central`
-  3. Run `scripts/check-central-version.sh`; if exit 0, no-op and done
-  4. If rebuild needed: `git -C /tmp/central checkout {new-tag}`
-  5. Run `scripts/copy-central-content.sh /tmp/central book/content/`
+  2. Clone take-ai-bite (public, no secret): `gh repo clone
+     albertodiazdurana/take-ai-bite /tmp/upstream`
+  3. Run `scripts/check-central-version.sh`; if exit 0, no-op and done.
+     (Script name retained as written for Session 1 continuity; it checks
+     the upstream configured in its body, which is take-ai-bite.)
+  4. If rebuild needed: `git -C /tmp/upstream checkout {new-tag}`
+  5. Run `scripts/copy-upstream-content.sh /tmp/upstream book/content/`
   6. Run `scripts/inject-version.sh {new-tag} $(date -u +%Y-%m-%d)`
   7. Run the deploy workflow generated by `myst init --gh-pages`
      (either invoke it or inline `mystmd build` + deploy-to-Pages
@@ -151,7 +190,7 @@ to Sprint 2.
 - Large-file pagination / H2-splitting transform (deferred per R3
   criterion)
 - Book landing page / project README tailored for readers (Sprint 2)
-- Automated check that Central CHANGELOG entries appear in the
+- Automated check that take-ai-bite CHANGELOG entries appear in the
   deployed site (Sprint 2 nice-to-have)
 
 ## Sprint 2 preview (not this sprint)
@@ -159,7 +198,7 @@ to Sprint 2.
 - Enable scheduled cron (uncomment the `schedule:` stanza after
   Sprint 1 proves the pipeline).
 - Act on any R3 measurement follow-ups.
-- Write a reader-facing project README (distinct from DSM Central's
+- Write a reader-facing project README (distinct from take-ai-bite's
   README).
 - Consider a GitHub release on this repo when the book first goes
   live, so the site launch is traceable.
@@ -170,8 +209,16 @@ to Sprint 2.
   install mystmd` or similar setup step).
 - `gh` CLI available (preinstalled on GitHub-hosted runners).
 - Repo Settings → Pages configured (item F).
-- DSM Central stays public — any change to visibility would break
+- take-ai-bite stays public — any change to visibility would break
   the no-PAT assumption and require revisiting Decision 0002.
+- take-ai-bite carries semver tags mirrored from DSM Central via
+  BL-376 (shipped between Sessions 2 and 3). As of 2026-04-18, take-ai-bite
+  has `v1.5.3` at commit `a37c070` (Central's first release under the new
+  mirror mechanism). Tag propagation is now automated on every
+  `/dsm-version-update` run in Central; no manual step required. Older
+  Central tags (v1.3.0-v1.5.2) are not backfilled and will never exist on
+  take-ai-bite. See "Open issues" below for the historical context that
+  is now resolved.
 
 ## Risks
 
@@ -189,12 +236,87 @@ to Sprint 2.
   write`). Mitigation: copy from the `myst init --gh-pages` template;
   don't hand-roll.
 
+## How to Resume
+
+If this sprint is picked up by a future session:
+
+1. Read this sprint plan end-to-end.
+2. Read the most recent checkpoint in `dsm-docs/checkpoints/` (none yet
+   at sprint start; created at sprint close per Boundary Checklist).
+3. `git checkout sprint-1/2026-04-17` (or the active sprint branch
+   tracked in MEMORY.md "Pending for next session").
+4. Verify toolchain: `mystmd --version` available locally; `gh` CLI
+   authenticated for the manual `workflow_dispatch` fire (item G).
+5. Inspect git log on the sprint branch to identify the next
+   unchecked work item in the A-I sequence.
+6. Continue from that item; each item lands as its own commit with
+   message prefix matching the item letter (e.g., "A: myst init
+   skeleton", "B: content-copy script").
+
 ## Notes
 
-- Each work item A-I should land as its own commit on a Sprint-1 task
-  branch (`sprint-1/{YYYY-MM-DD}` per Three-Level Branching Strategy)
-  to preserve the dependency chain in git history.
-- Sprint 1 closes when exit criteria 1-6 are all met; at that point,
-  this file moves to `dsm-docs/plans/done/` with
-  `**Date Completed:** YYYY-MM-DD` and `**Outcome:** Sprint 1 exit
-  criteria met; {commit-sha}`.
+- **Capability vs closure.** Exit criteria 1-6 define when the sprint
+  *capability* is delivered. Sprint *closure* requires additionally
+  ticking the Sprint Boundary Checklist below. The two are separate
+  gates: a green workflow run satisfies exit criteria but does not
+  close the sprint on its own.
+- When both gates pass, this file moves to `dsm-docs/plans/done/` with
+  `**Date Completed:** YYYY-MM-DD` and
+  `**Outcome:** Sprint 1 exit criteria met + boundary checklist
+  complete; {commit-sha}`.
+
+## Open issues
+
+### Session 2 (resolved in Session 3)
+
+- **take-ai-bite tagging prerequisite — RESOLVED.** Session 2 flagged
+  that take-ai-bite had zero git tags and proposed two resolutions
+  (manual tag, or CHANGELOG-parse fallback). Between Sessions 2 and 3,
+  DSM Central shipped BL-376 (Mirror Central Release Tags to TAB on
+  /dsm-version-update), which auto-pushes `vX.Y.Z` tags from Central to
+  take-ai-bite on every release. v1.5.3 landed on take-ai-bite at
+  `a37c070` on 2026-04-18; this is the first tag available to item G and
+  replaces v1.5.2 as the Sprint 1 target. Item C therefore adopts the
+  simpler "query tags via `gh api`" path (strategy (a)), no CHANGELOG
+  fallback needed for Sprint 1.
+- **take-ai-bite CHANGELOG.md already carries version history** in text
+  form (Keep a Changelog format). Still valid as a second-layer fallback
+  if `gh api` is unreachable, but not required for Sprint 1 given
+  BL-376's automated tag propagation. CHANGELOG-parse variant deferred
+  indefinitely unless a future failure mode motivates it.
+
+## Sprint Boundary Checklist
+
+Per DSM Template 8 (`DSM_2.0.C_Sprint_Assessment_Templates.md` §1).
+Project type is Application (DSM 4.0) (reclassified in Session 2;
+see CLAUDE.md §Project Type). All 8 canonical Template 8 items apply,
+including "Tests passing" (DSM 4.0).
+
+- [ ] Checkpoint document created (`dsm-docs/checkpoints/YYYY-MM-DD_s{N}_sprint-1-close.md`)
+  covering: sprint outcome summary, measurements recorded, any
+  follow-up BLs spawned, branch state at close.
+- [ ] Feedback files updated:
+  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_backlogs.md` for any
+    new BL proposals surfaced during sprint execution.
+  - `dsm-docs/feedback-to-dsm/YYYY-MM-DD_s{N}_methodology.md` for
+    methodology observations and scores.
+- [ ] Decision log updated: any new decisions made during sprint
+  execution filed under `dsm-docs/decisions/` with the next
+  sequential number after 0003.
+- [ ] Tests passing: item G's end-to-end test (manual
+  `workflow_dispatch` fire) ran green and the deployed site renders
+  v1.5.2 correctly. Any subsequent unit/integration tests for
+  `scripts/*.sh` added during sprint execution also pass.
+- [ ] Blog journal entry written (`dsm-docs/blog/journal.md`) capturing
+  the "pipeline first green build" moment; format per the existing
+  journal entry template.
+- [ ] Blog publication tracker updated (`dsm-docs/blog/README.md`)
+  if a blog entry or material file was generated; otherwise skip with
+  a note in the checkpoint.
+- [ ] Repository README updated: project `README.md` reflects that the
+  book site is live, includes the deployed URL, and links to the
+  take-ai-bite source repo.
+- [ ] Next steps summary written in the checkpoint: 3-5 sentences
+  covering Sprint 2 goal (activate scheduled cron, address any R3
+  measurement follow-ups), key deliverables, and the plan reference
+  (Sprint 2 preview section above).

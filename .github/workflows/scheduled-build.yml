@@ -1,0 +1,139 @@
+# Orchestrator for the DSM book's take-ai-bite -> GitHub Pages pipeline.
+#
+# Flow (BL-002 item E):
+#   1. Checkout this repo
+#   2. scripts/check-upstream-version.sh
+#        rc=0  -> latest tag matches .last-built-version, no rebuild (unless forced)
+#        rc=10 -> new tag available, rebuild
+#        rc=1  -> error (propagates as workflow failure)
+#   3. If rebuild: shallow clone take-ai-bite at the new tag
+#   4. scripts/copy-upstream-content.sh into book/content/ (43 files, flat glob)
+#   5. scripts/inject-version.sh rewrites book/myst.yml (logo_text + parts.footer)
+#   6. myst build --html in book/
+#   7. actions/upload-pages-artifact + deploy-pages
+#   8. Commit .last-built-version back to this repo (item I: keeps the schedule
+#      alive past the 60-day inactivity GH-Actions gotcha and records the
+#      deployed tag in git history)
+#
+# Design note (Session 3): build+deploy is inlined here rather than calling
+# deploy.yml as a reusable workflow. Reusable-workflow jobs run in a separate
+# context with a fresh checkout, so the gitignored book/content/ and the
+# per-build rewritten book/myst.yml would not be visible to a deploy job.
+# deploy.yml stays as a direct workflow_dispatch utility for testing builds
+# off main's committed state without going through the orchestrator.
+#
+# Exit criterion 6 (BL-002): no scheduled cron for Sprint 1. The schedule
+# stanza is deliberately commented out. Sprint 2 will uncomment it.
+
+name: Scheduled build (take-ai-bite -> GitHub Pages)
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if the latest tag matches .last-built-version
+        type: boolean
+        default: false
+  # Sprint 2: uncomment to activate daily polling.
+  # schedule:
+  #   - cron: '0 6 * * *'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: scheduled-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      BASE_URL: /${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream version
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          NEW_TAG=$(scripts/check-upstream-version.sh)
+          rc=$?
+          set -e
+          if [ $rc -eq 10 ]; then
+            echo "rebuild=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          elif [ $rc -eq 0 ]; then
+            if [ "${{ inputs.force }}" = "true" ]; then
+              LATEST=$(gh api repos/albertodiazdurana/take-ai-bite/tags --paginate --jq '.[].name' \
+                | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+                | sort -V | tail -n 1)
+              echo "rebuild=true" >> "$GITHUB_OUTPUT"
+              echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+            else
+              echo "rebuild=false" >> "$GITHUB_OUTPUT"
+              echo "No rebuild needed (latest == $(cat .last-built-version 2>/dev/null || echo 'none'))"
+            fi
+          else
+            exit $rc
+          fi
+
+      - name: Clone upstream at tag
+        if: steps.check.outputs.rebuild == 'true'
+        run: |
+          git clone --depth 1 --branch "${{ steps.check.outputs.tag }}" \
+            https://github.com/albertodiazdurana/take-ai-bite.git /tmp/upstream
+
+      - name: Copy upstream content
+        if: steps.check.outputs.rebuild == 'true'
+        run: scripts/copy-upstream-content.sh /tmp/upstream book/content
+
+      - name: Inject version into myst.yml
+        if: steps.check.outputs.rebuild == 'true'
+        run: scripts/inject-version.sh "${{ steps.check.outputs.tag }}" "$(date -u +%Y-%m-%d)"
+
+      - name: Setup Pages
+        if: steps.check.outputs.rebuild == 'true'
+        uses: actions/configure-pages@v3
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.rebuild == 'true'
+        with:
+          node-version: 18.x
+
+      - name: Install mystmd
+        if: steps.check.outputs.rebuild == 'true'
+        run: npm install -g mystmd
+
+      - name: Build HTML
+        if: steps.check.outputs.rebuild == 'true'
+        run: myst build --html
+        working-directory: book
+
+      - name: Upload Pages artifact
+        if: steps.check.outputs.rebuild == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./book/_build/html
+
+      - name: Deploy to GitHub Pages
+        if: steps.check.outputs.rebuild == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Commit .last-built-version back
+        if: steps.check.outputs.rebuild == 'true'
+        run: |
+          echo "${{ steps.check.outputs.tag }}" > .last-built-version
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .last-built-version
+          git commit -m "chore: build DSM ${{ steps.check.outputs.tag }} ($(date -u +%Y-%m-%d))"
+          git push

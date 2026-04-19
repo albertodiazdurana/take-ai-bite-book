@@ -1,0 +1,22 @@
+# MyST Document Engine config for the DSM book site.
+# Placeholder values for site.title and logo_text are rewritten at build time
+# by scripts/inject-version.sh (BL-002 item D) with the deployed Central tag
+# and build date, e.g., "DSM Methodology , v1.5.2".
+version: 1
+project:
+  title: DSM Methodology
+  description: >
+    A deliberate, systematic methodology for agentic-AI data-science work.
+    Built from the upstream take-ai-bite repository (public mirror of DSM
+    Central) at a tagged release.
+  github: https://github.com/albertodiazdurana/take-ai-bite
+  license:
+    content: CC-BY-4.0
+    code: MIT
+  toc:
+    - file: content/README.md
+site:
+  template: book-theme
+  title: DSM Methodology
+  options:
+    logo_text: DSM Methodology
