@@ -1,6 +1,6 @@
 # BACKLOG-003: Sprint 2 — Scheduled Builds, Drift Reporting, Artifact Research
 
-**Status:** In progress
+**Status:** Done (closed Session 6, 2026-04-20)
 **Priority:** High
 **Date Created:** 2026-04-19
 **Origin:** Sprint 1 closure checkpoint (`dsm-docs/checkpoints/done/2026-04-19_s4_sprint-1-close.md`, "Next steps (Sprint 2)" section)
@@ -153,3 +153,36 @@ If a session ends mid-sprint:
 ## Open issues
 
 - None at sprint-plan creation. Will be appended here as they surface during phases.
+
+## Phase closure notes
+
+### Phase A (2026-04-19 → 2026-04-20)
+
+- Cron stanza uncommitted via PR #6 (2026-04-19, merged to main with `--base main` per Check-B discipline).
+- Registration verified immediately via `gh workflow view` (cron `'0 6 * * *'` indexed, state=active).
+- First scheduled fire: **run 24652216077, event=schedule, conclusion=success, started 2026-04-20T06:39:39Z**, completed green. Artifact 6525506268 (15.47 MB zipped). Observation: cron fired ~39 min past the nominal 06:00 UTC window; GitHub cron is best-effort, 30-60 min delays are normal for free-tier repos, especially first-ever fire on a newly-activated schedule. Not a project concern.
+
+### Phase B (2026-04-20)
+
+- Drift-reporting YAML added to `scheduled-build.yml` Check step (commit `05f4b78`). Emits a 4-row table + `**Drift state:**` line to `$GITHUB_STEP_SUMMARY` on every run. Drift classifier: `INITIAL BUILD` / `IN SYNC` / `DRIFTED (X -> Y)`.
+- Live dispatch on sprint-2 rejected by `github-pages` environment policy at startup (run 24664805194, failed in 2 s, zero steps). Environment is pinned to `main`, feature branches cannot run the deploy-linked workflow end-to-end. Phase B evidence captured via local shell simulation instead.
+- Simulation covers 4 cases (INITIAL, IN SYNC, DRIFTED, IN SYNC+FORCE). All 4 produce correct summary output. Evidence: `dsm-docs/checkpoints/2026-04-20_s6_phase-b-drift-simulation.md`.
+- Live IN SYNC cross-check deferred to post-merge `workflow_dispatch --ref main`.
+
+### Phase C (2026-04-19 kickoff + 2026-04-20 completion)
+
+- Skeleton committed on sprint-2 in S5 (2026-04-19).
+- Evidence gathering, option inventory, comparison, recommendation all completed S6 (2026-04-20). File: `dsm-docs/research/2026-04-19_artifact-bloat_research.md`, Status: Complete.
+- Key findings: plotly 18.43 MB + thebe 3.83 MB = 22.26 MB (31 % of artifact, NOT the ~90 % hypothesized in S4 checkpoint). Remaining 35 MB is MyST framework chunks. Corpus has zero executable-content directives across 43 DSM_*.md files. Recommended path: post-build prune of plotly + thebe (~15 LOC YAML, 22 MB savings, manual browser validation).
+- BACKLOG-004 created (`dsm-docs/plans/BACKLOG-004_artifact-prune.md`) as the implementation follow-up for a future sprint.
+
+## Surprises
+
+- **Environment-policy timing.** GitHub Actions' environment-branch policy gate runs before any step executes, not between steps. I had assumed the Check step's `$GITHUB_STEP_SUMMARY` write would be captured even if the later Deploy step failed the policy; it is not, because the job itself is rejected at startup. This invalidated the "run synthetic drift on sprint-2 and accept Deploy failure" testing approach. Workaround: local shell simulation (B4).
+- **Scheduled-fire indexing lag.** The first scheduled fire was captured in the artifacts API ~40 s after run start, but `gh run list --event=schedule` returned empty for several minutes thereafter (possibly API eventual-consistency, possibly the run was indexed under `workflow_dispatch` in the list query's cache and not refreshed). Checking artifacts directly was the faster verification path.
+- **S4 "~90 % plotly+thebe" hypothesis was wrong.** The real number is 31 %. Sprint 2 caught this before it was used to size BACKLOG-004 expectations.
+
+## Follow-up BLs
+
+- **BACKLOG-004** (Medium): artifact prune implementation, Option 2 from Phase C research.
+- No other BLs spawned from Sprint 2. A future sprint may explore chunk-bundle reduction if BL-004's 22 MB saving is insufficient, but that is not on the critical path.
