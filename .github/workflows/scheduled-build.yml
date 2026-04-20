@@ -157,21 +157,20 @@ jobs:
         run: myst build --html
         working-directory: book
 
-      - name: Prune theme-bundled runtime (plotly + thebe)
+      - name: Prune theme-bundled runtime (plotly only)
         if: steps.check.outputs.rebuild == 'true'
         working-directory: book/_build/html
         run: |
           BEFORE=$(du -sh . | awk '{print $1}')
           BEFORE_BYTES=$(du -sb . | awk '{print $1}')
           find . -name '*plotly*.js' -delete
-          find . \( -name '*thebe*.js' -o -name '*thebe*.css' \) -delete
           AFTER=$(du -sh . | awk '{print $1}')
           AFTER_BYTES=$(du -sb . | awk '{print $1}')
           SAVED_BYTES=$((BEFORE_BYTES - AFTER_BYTES))
           SAVED_MB=$(awk "BEGIN { printf \"%.1f\", $SAVED_BYTES / 1024 / 1024 }")
           {
             echo ""
-            echo "## Artifact prune (plotly + thebe)"
+            echo "## Artifact prune (plotly)"
             echo ""
             echo "| Field | Value |"
             echo "|---|---|"
@@ -198,5 +197,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add .last-built-version
-          git commit -m "chore: build DSM ${{ steps.check.outputs.tag }} ($(date -u +%Y-%m-%d))"
-          git push
+          if git diff --cached --quiet; then
+            echo "No change to .last-built-version; skipping commit (force=true rebuild of same tag)."
+          else
+            git commit -m "chore: build DSM ${{ steps.check.outputs.tag }} ($(date -u +%Y-%m-%d))"
+            git push
+          fi
