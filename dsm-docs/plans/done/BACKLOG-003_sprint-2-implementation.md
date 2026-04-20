@@ -167,7 +167,7 @@ If a session ends mid-sprint:
 - Drift-reporting YAML added to `scheduled-build.yml` Check step (commit `05f4b78`). Emits a 4-row table + `**Drift state:**` line to `$GITHUB_STEP_SUMMARY` on every run. Drift classifier: `INITIAL BUILD` / `IN SYNC` / `DRIFTED (X -> Y)`.
 - Live dispatch on sprint-2 rejected by `github-pages` environment policy at startup (run 24664805194, failed in 2 s, zero steps). Environment is pinned to `main`, feature branches cannot run the deploy-linked workflow end-to-end. Phase B evidence captured via local shell simulation instead.
 - Simulation covers 4 cases (INITIAL, IN SYNC, DRIFTED, IN SYNC+FORCE). All 4 produce correct summary output. Evidence: `dsm-docs/checkpoints/2026-04-20_s6_phase-b-drift-simulation.md`.
-- Live IN SYNC cross-check deferred to post-merge `workflow_dispatch --ref main`.
+- Live IN SYNC cross-check completed post-merge on main: run `24667001786` (workflow_dispatch, force=false, 2026-04-20T12:40Z), conclusion=success. Check-step output: `No rebuild needed (latest == v1.6.0)`, DRIFT_STATE=`IN SYNC`, REBUILD_REASON=`in sync, no rebuild`. Rebuild-conditional downstream steps (Clone/Copy/Inject/Build/Upload/Deploy/Commit) all correctly skipped. IN SYNC path now verified end-to-end in live infrastructure, complementing the B4 local simulation.
 
 ### Phase C (2026-04-19 kickoff + 2026-04-20 completion)
 

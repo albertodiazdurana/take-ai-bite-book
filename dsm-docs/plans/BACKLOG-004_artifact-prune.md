@@ -1,6 +1,6 @@
 # BACKLOG-004: Artifact Prune (plotly + thebe runtime removal)
 
-**Status:** Draft (pending approval)
+**Status:** Active (Sprint 3, BL-005)
 **Priority:** Medium
 **Date Created:** 2026-04-20
 **Origin:** Sprint 2 BACKLOG-003 Phase C research (`dsm-docs/research/2026-04-19_artifact-bloat_research.md`)

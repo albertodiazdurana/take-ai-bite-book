@@ -157,6 +157,29 @@ jobs:
         run: myst build --html
         working-directory: book
 
+      - name: Prune theme-bundled runtime (plotly + thebe)
+        if: steps.check.outputs.rebuild == 'true'
+        working-directory: book/_build/html
+        run: |
+          BEFORE=$(du -sh . | awk '{print $1}')
+          BEFORE_BYTES=$(du -sb . | awk '{print $1}')
+          find . -name '*plotly*.js' -delete
+          find . \( -name '*thebe*.js' -o -name '*thebe*.css' \) -delete
+          AFTER=$(du -sh . | awk '{print $1}')
+          AFTER_BYTES=$(du -sb . | awk '{print $1}')
+          SAVED_BYTES=$((BEFORE_BYTES - AFTER_BYTES))
+          SAVED_MB=$(awk "BEGIN { printf \"%.1f\", $SAVED_BYTES / 1024 / 1024 }")
+          {
+            echo ""
+            echo "## Artifact prune (plotly + thebe)"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Size before prune | \`$BEFORE\` |"
+            echo "| Size after prune | \`$AFTER\` |"
+            echo "| Saved | \`${SAVED_MB} MB\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload Pages artifact
         if: steps.check.outputs.rebuild == 'true'
         uses: actions/upload-pages-artifact@v3
