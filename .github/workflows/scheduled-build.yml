@@ -69,23 +69,61 @@ jobs:
           NEW_TAG=$(scripts/check-upstream-version.sh)
           rc=$?
           set -e
+
+          LAST_BUILT=$(cat .last-built-version 2>/dev/null || echo "(none)")
+          REBUILD_FLAG=false
+
           if [ $rc -eq 10 ]; then
+            LATEST="$NEW_TAG"
             echo "rebuild=true" >> "$GITHUB_OUTPUT"
-            echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+            echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+            REBUILD_FLAG=true
+            REBUILD_REASON="new tag available"
           elif [ $rc -eq 0 ]; then
+            LATEST="$LAST_BUILT"
             if [ "${{ inputs.force }}" = "true" ]; then
               LATEST=$(gh api repos/albertodiazdurana/take-ai-bite/tags --paginate --jq '.[].name' \
                 | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
                 | sort -V | tail -n 1)
               echo "rebuild=true" >> "$GITHUB_OUTPUT"
               echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+              REBUILD_FLAG=true
+              REBUILD_REASON="forced (workflow_dispatch force=true)"
             else
               echo "rebuild=false" >> "$GITHUB_OUTPUT"
-              echo "No rebuild needed (latest == $(cat .last-built-version 2>/dev/null || echo 'none'))"
+              REBUILD_REASON="in sync, no rebuild"
+              echo "No rebuild needed (latest == $LAST_BUILT)"
             fi
           else
             exit $rc
           fi
+
+          # Drift state classification
+          if [ "$LAST_BUILT" = "(none)" ]; then
+            DRIFT_STATE="INITIAL BUILD"
+          elif [ "$LATEST" = "$LAST_BUILT" ]; then
+            DRIFT_STATE="IN SYNC"
+          else
+            DRIFT_STATE="DRIFTED ($LAST_BUILT -> $LATEST)"
+          fi
+
+          # Summary block visible in the Actions UI for every run
+          {
+            echo "## take-ai-bite sync status"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Last built version | \`$LAST_BUILT\` |"
+            echo "| Latest upstream tag | \`$LATEST\` |"
+            echo "| Rebuild this run | $REBUILD_REASON |"
+            if [ "$REBUILD_FLAG" = "true" ]; then
+              echo "| Tag being built | \`$LATEST\` |"
+            else
+              echo "| Tag being built | , (no rebuild) |"
+            fi
+            echo ""
+            echo "**Drift state:** $DRIFT_STATE"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Clone upstream at tag
         if: steps.check.outputs.rebuild == 'true'
