@@ -32,3 +32,37 @@ The methodology observation for DSM: every one of these could have been caught e
 Side observation on the build output: the 15-MB zipped Pages artifact is 90 % plotly + thebe JS runtime that this prose-only corpus never invokes. The book-theme ships interactive-content infrastructure unconditionally. A Sprint 2 BL candidate: trim to prose-only and see how small the deploy gets.
 
 Sprint 1 is closed. Sprint 2 starts with: activate the schedule, trim the bundle, formalize BL-003.
+
+---
+
+### [2026-04-19] Sprint 2 kickoff: cron live, research queued, and two merges with explicit brakes
+
+Session 5 formalized BACKLOG-003 and flipped the pipeline from manual to scheduled. The plan landed on main, the daily cron went live, and the artifact-bloat research file opened as a skeleton on the sprint branch.
+
+Two merges to main happened this session. Both went through the same checks: open PR with `--base main` explicit, verify the base with `gh pr view` before the merge, pause for user approval, then merge. Both looked trivial, a one-file plan in PR #5 and a two-line cron uncomment in PR #6, and trivial is exactly the shape of the bug Sprint 1 caught. The ritual stays. Merging to main is not where you save time.
+
+Of the three, the research file is the one I care about most. Sprint 1's checkpoint hypothesized plotly + thebe were ~90 % of the 68-MB deploy, but that number came from a quick peek, not a measured breakdown. Phase C's first task is to audit the claim before the implementation BL inherits it. If the hypothesis is wrong, the implementation sprint plans for a bundle that does not exist.
+
+The one thing that did not close cleanly was the `session-1/2026-04-17` force-delete. The branch carries commits from the wrong-base PR #2 that never reached main, so `git branch -d` refuses. The harness's permission policy refused the `-D` form twice despite my verbal authorization. Deferring to manual cleanup. What is worth noting: the S4 checkpoint described session-1 as "fully merged to main," an assumption nobody checked until this session actually ran `git merge-base --is-ancestor` and saw the reality.
+
+Next session's opening move: check whether the 06:00 UTC cron fire landed green, record the run ID, then pick up Phase B (drift reporting) or continue Phase C (evidence gathering), whichever is further from done.
+
+---
+
+### [2026-04-20] Sprint 2 closure: cron delivered, a wrong hypothesis caught, and the test that could not be run
+
+The 06:00 UTC cron fire arrived 39 minutes late. GitHub's scheduled-workflow runner is best-effort on free-tier repos and 06:00 UTC is globally hot, so 30-60 min delays are normal. The first check, `gh run list --event=schedule`, returned empty; the artifacts endpoint listed the run a minute later with `event=schedule, conclusion=success`. Run 24652216077, artifact 6525506268. Phase A exit criterion met.
+
+Phase C's first task was to audit the Sprint 1 hypothesis that plotly + thebe were ~90 % of the 68-MB deploy. The audit came in at 31 %. Plotly is 18.43 MB, thebe is 3.83 MB, total 22.26 MB. The other 45 MB is the MyST framework's React + Remix chunk bundle, which Sprint 1's cursory inspection didn't see because the chunks have hashed names and don't look like "a runtime" at first glance. If Sprint 1's number had been adopted for BL-004 sizing, the implementation sprint would have expected a 60-MB drop and gotten a 22-MB drop instead. Catching it at research time, before the implementation BL was written, saved that cycle.
+
+Phase B was where the session's one genuine course correction happened. The plan called for drift reporting via `$GITHUB_STEP_SUMMARY`, a workflow-level output visible in the Actions UI. The YAML change was small, the logic was straightforward: last-built version, latest upstream, a rebuild reason, and a three-state drift classifier. Gates 1 and 2 of the Pre-Generation Brief Protocol ran cleanly, design approved, diff approved, implementation committed.
+
+Then I tried to test it. The plan was synthetic drift: push `.last-built-version=v1.5.3` on the feature branch, dispatch the workflow, watch the Check step write a DRIFTED summary, expect the Deploy step to fail because the `github-pages` environment is pinned to main. The summary would be captured before the Deploy failure. That was the plan.
+
+The run failed in 2 seconds, zero steps executed. The environment-branch-policy gate runs **before** step execution, not between steps. The Check step never got a chance to write a summary. The feature-branch test was structurally impossible.
+
+The course correction was to simulate the Check step locally , same shell logic, four synthetic input sets, outputs piped to a local file. All four cases produced correct summaries. Evidence captured, exit criterion met. The real workflow run on main will confirm the in-sync path end-to-end after the merge.
+
+Sprint 2's methodology takeaway, which goes back to DSM Central: protected-environment workflows cannot be tested end-to-end on feature branches. The test options collapse to (a) relax the environment policy, (b) merge-then-test on main, or (c) simulate locally. For any workflow deploying to a GitHub environment with a branch policy, the default testing posture should be local simulation, not dispatch. This is the kind of thing that looks obvious in retrospect and cost ~20 minutes to rediscover in real time.
+
+Three items delivered, one follow-up BL filed (BACKLOG-004, artifact prune). Sprint 2 closes with the pipeline in a state the DSM project didn't have yesterday: a daily scheduled build, drift visibility for the maintainer, and an evidence-backed, size-bounded next sprint ready to pick up.
