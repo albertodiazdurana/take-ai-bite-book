@@ -1,3 +1,5 @@
+**Consumed at:** Session 7 start (2026-04-20)
+
 # Phase B drift reporting , simulation evidence (Session 6)
 
 **Date:** 2026-04-20

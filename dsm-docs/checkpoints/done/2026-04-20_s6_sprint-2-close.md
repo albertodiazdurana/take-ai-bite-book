@@ -1,3 +1,5 @@
+**Consumed at:** Session 7 start (2026-04-20)
+
 # Sprint 2 closure checkpoint
 
 **Date:** 2026-04-20
